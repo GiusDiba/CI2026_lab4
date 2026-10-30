@@ -7,14 +7,6 @@ MOVES = {
     "down": (1, 1)
 }
 
-class Move:
-    tag: str
-    action: tuple
-
-    def __init__(self, tag: str, action: tuple):
-        self.tag = tag
-        self.action = action 
-
 # Coordinates of a piece always refer to its top-left corner
 class Piece:
     tag: str
@@ -56,20 +48,32 @@ class IllegalMoveException(Exception):
 class Board:
     width: int
     height: int
-    exit_loc: tuple
+    exit_loc: int # the full "door" spans from index exit_loc to exit_loc + pieces[target].width - 1; it's always at the bottom
 
     pieces = dict
     board = list
+    target: str
+    win_position: tuple # (row, col), the coordinates that have to be reached by the top-left cell of the piece in order to win 
 
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int, exit_loc: tuple[int]):
         self.width = width
         self.height = height
 
-        loc = (width - 1) // 2
-        self.exit_loc = (loc, loc + 1)
+        self.exit_loc = exit_loc
 
         self.pieces = {}
         self.board = [["." for _ in range(width)] for _ in range(height)]
+
+    def setTargetPiece(self, tag: str) -> None:
+        if len(self.pieces) == 0 or self.pieces[tag].width + self.exit_loc - 1 >= self.width:
+            return
+        self.target = tag
+        self.win_position = (self.height - self.pieces[tag].height, self.exit_loc)
+    
+    def isVictory(self) -> bool:
+        v_row, v_col = self.win_position
+        target_piece = self.pieces[self.target]
+        return (target_piece.row == v_row) and (target_piece.col == v_col)
 
     def printBoard(self) -> str:
         brd = "=========\n"
@@ -137,7 +141,6 @@ class Board:
         global MOVES
         for action in MOVES:
             axis, increment = MOVES[action]
-            print(f"Checking move {axis}, {increment}")
             try:
                 if axis == 0:
                     self.getRangeAndCol(piece, increment)
@@ -184,7 +187,6 @@ class Board:
         return True
 
 
-        # Check if the piece would be out of bounds
         
         
 
