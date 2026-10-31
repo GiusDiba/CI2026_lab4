@@ -154,3 +154,5 @@ pieces = [
 
 ]
 initializeProblem(KP06, pieces, "A")
+
+del pieces

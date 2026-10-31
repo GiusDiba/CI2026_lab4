@@ -53,6 +53,7 @@ class Board:
     exit_loc: int # the full "door" spans from index exit_loc to exit_loc + pieces[target].width - 1; it's always at the bottom
 
     pieces = dict
+    legal_moves: set
     board = list
     target: str
     win_position: tuple # (row, col), the coordinates that have to be reached by the top-left cell of the piece in order to win 
@@ -62,6 +63,7 @@ class Board:
         self.height = height
 
         self.exit_loc = exit_loc
+        self.legal_moves = set()
 
         self.pieces = {}
         self.board = [["." for _ in range(width)] for _ in range(height)]
@@ -112,7 +114,8 @@ class Board:
             for p_col in range(piece.col, col_boundary):
                 self.board[p_row][p_col] = piece.tag
         self.pieces[piece.tag] = piece
-        self.updatePieceAvailableMoves(self.pieces[piece.tag])
+        for p in self.pieces:
+            self.updatePieceAvailableMoves(self.pieces[p])
 
     def getRangeAndCol(self, piece: Piece, increment: int) -> (int, int):
         if increment > 0:                      # If I go right, i have to check 1 column to the right
@@ -152,9 +155,10 @@ class Board:
                 else:
                     self.getRangeAndRow(piece, increment)
                 piece.addAvailableMove(action)
+                self.legal_moves.add((piece.tag, action))
             except IllegalMoveException:
                 piece.removeAvailableMove(action)
-
+                self.legal_moves.discard((piece.tag, action))
 
     def movePiece(self, tag: str, direction: str) -> str:
         global MOVES
@@ -187,9 +191,13 @@ class Board:
                 self.board[row_to_check][idx] = tag
             # update piece
             piece.verticalStep(move_increment)
-
-        self.updatePieceAvailableMoves(piece)
+        for p in self.pieces:
+            self.updatePieceAvailableMoves(self.pieces[p])
         return tag
+
+    def getManhattanDistanceToExit(self) -> int: # ideal number of moves neede if the board would be empty in order to reach the exit
+        piece = self.pieces[self.target]
+        return abs(piece.row - self.win_position[0] + piece.col - self.win_position[1])
 
 class Problem():
     _id: str
