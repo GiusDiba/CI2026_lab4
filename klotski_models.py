@@ -40,10 +40,12 @@ class Piece:
     def removeAvailableMove(self, action_tag: str) -> None:
         self.available_moves.discard(action_tag)
 
+# If there is a piece blocking the way, error_code is its tag. If the piece would be out of bounds, error_code is an empty_string
 class IllegalMoveException(Exception):
-    def __init__(self, message):
+    def __init__(self, message: str, error_code: str):
         self.message = message
         super().__init__(self.message)
+        self.error_code = error_code
 
 class Board:
     width: int
@@ -55,7 +57,7 @@ class Board:
     target: str
     win_position: tuple # (row, col), the coordinates that have to be reached by the top-left cell of the piece in order to win 
 
-    def __init__(self, width: int, height: int, exit_loc: tuple[int]):
+    def __init__(self, width: int, height: int, exit_loc: int):
         self.width = width
         self.height = height
 
@@ -64,11 +66,14 @@ class Board:
         self.pieces = {}
         self.board = [["." for _ in range(width)] for _ in range(height)]
 
-    def setTargetPiece(self, tag: str) -> None:
-        if len(self.pieces) == 0 or self.pieces[tag].width + self.exit_loc - 1 >= self.width:
-            return
+    def setTargetPiece(self, tag: str) -> tuple | None:
+        far_left = self.pieces[tag].width + self.exit_loc - 1
+        if len(self.pieces) == 0 or far_left >= self.width:
+            return None
         self.target = tag
         self.win_position = (self.height - self.pieces[tag].height, self.exit_loc)
+        door = tuple(range(self.exit_loc, far_left))
+        return door
     
     def isVictory(self) -> bool:
         v_row, v_col = self.win_position
@@ -117,10 +122,10 @@ class Board:
         range_to_check = range(piece.row, piece.row + piece.height) # I want to check every element in the column
         # actual check
         if (col_to_check >= self.width ) or (col_to_check < 0):
-            raise IllegalMoveException("Out of bounds")
+            raise IllegalMoveException("Out of bounds", "")
         for idx in range_to_check:
             if self.board[idx][col_to_check] != ".":
-                raise IllegalMoveException("No space available")
+                raise IllegalMoveException("A piece is blocking the way", self.board[idx][col_to_check])
         return range_to_check, col_to_check
 
     def getRangeAndRow(self, piece: Piece, increment: int) -> (int, int):
@@ -131,10 +136,10 @@ class Board:
         range_to_check = range(piece.col, piece.col + piece.width)
         # actual check
         if (row_to_check >= self.height) or (row_to_check < 0):
-            raise IllegalMoveException("Out of bounds")
+            raise IllegalMoveException("Out of bounds", "")
         for idx in range_to_check:
             if self.board[row_to_check][idx] != ".":
-                raise IllegalMoveException("No space available")
+                raise IllegalMoveException("A piece is blocking the way", self.board[row_to_check][idx])
         return range_to_check, row_to_check
 
     def updatePieceAvailableMoves(self, piece: Piece) -> None:
@@ -151,20 +156,20 @@ class Board:
                 piece.removeAvailableMove(action)
 
 
-    def movePiece(self, tag: str, direction: str) -> bool:
+    def movePiece(self, tag: str, direction: str) -> str:
         global MOVES
         piece = self.pieces[tag]    
 
         if direction not in piece.available_moves:
-            return False
+            return ""
         
         move_axis, move_increment = MOVES[direction]
 
         if move_axis == 0:                              # I'm changing column
             try:
                 range_to_check, col_to_check = self.getRangeAndCol(piece, move_increment)
-            except IllegalMoveException:
-                return False
+            except IllegalMoveException as e:
+                return e.error_code
             # free furthest column and populate new one
             for idx in range_to_check:
                 self.board[idx][col_to_check - move_increment * piece.width] = "."
@@ -174,8 +179,8 @@ class Board:
         else: 
             try:                                          # I'm changing row
                 range_to_check, row_to_check = self.getRangeAndRow(piece, move_increment)
-            except IllegalMoveException:
-                return False
+            except IllegalMoveException as e:
+                return e.error_code
             # free furthest row and populate new one
             for idx in range_to_check:
                 self.board[row_to_check - move_increment * piece.height][idx] = "."
@@ -184,11 +189,43 @@ class Board:
             piece.verticalStep(move_increment)
 
         self.updatePieceAvailableMoves(piece)
-        return True
+        return tag
 
+class Problem():
+    _id: str
+    size: tuple
+    _exit: tuple
+    target: str
 
-        
-        
+    board: Board
 
+    def __init__(self, _id: str, width: int, height: int, _exit_idx: int):
+        self._id = _id
+        self.size = (width, height)
+        self._exit = (1,)
+        self.board = Board(width, height, _exit_idx)
 
+    def getBoard(self) -> Board:
+        return self.board
+
+    def setTargetPiece(self, tag: str) -> None:
+        res = self.board.setTargetPiece(tag)
+        if res is None:
+            return
+        else:
+            self.target = tag
+            self._exit = res
+
+    def __str__(self) -> str:
+        problem = f"problem {self._id}\n"
+        size = f"size {self.size[0]} {self.size[1]}\n"
+        locs = ""
+        for l in self._exit:
+            locs += f"{l} "
+        ex = f"exit bottom {locs}\n"
+        tgt = f"target {self.target}\n"
+        return problem + size + ex + tgt + self.board.printBoard()
+
+    def isSolved(self) -> bool:
+        return self.board.isVictory()
 
