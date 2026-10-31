@@ -72,7 +72,7 @@ class Board:
             return None
         self.target = tag
         self.win_position = (self.height - self.pieces[tag].height, self.exit_loc)
-        door = tuple(range(self.exit_loc, far_left))
+        door = tuple(range(self.exit_loc, far_left + 1))
         return door
     
     def isVictory(self) -> bool:
