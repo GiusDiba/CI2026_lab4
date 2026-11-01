@@ -15,6 +15,7 @@ def search(
     moves = []
 
     while cur_board is not None and not cur_board.isVictory():
+        #print(f"Considering state:\n{cur_board.printBoard()}")
         for action in cur_board.legal_moves:
             new_board = deepcopy(cur_board)
             new_board.movePiece(action[0], action[1])
@@ -27,29 +28,36 @@ def search(
                 state_costs[new_board] = state_costs[cur_board] + 1
                 parent_state[new_board] = cur_board
                 previous_move[new_board] = action
-        
+                frontier.push_update(new_board, state_costs[new_board] + new_board.getManhattanDistanceToExit())        
         if frontier:
             cur_board, _ = frontier.pop()
         else:
             cur_board = None
     
-    states_path = []
-    moves_path = []
-    state = cur_board
-    while state:
-        states_path.append(state.printBoard())
-        moves_path.append(previous_move[state])
-        state = parent_state[state]
+    if cur_board is None:
+        solution = {
+            "solved": False,
+            "visited_states": len(state_costs)
+        }
+    else:
+        states_path = []
+        moves_path = []
+        state = cur_board
+        while state:
+            states_path.append(state.printBoard())
+            moves_path.append(previous_move[state])
+            state = parent_state[state]
 
-    states_path.reverse()
-    moves_path.pop()
-    moves_path.reverse()
+        states_path.reverse()
+        moves_path.pop()
+        moves_path.reverse()
 
-    solution = {
-        "path": states_path,
-        "moves": moves_path,
-        "visited_states": len(state_costs) 
-    }
+        solution = {
+            "solved": True,
+            "path": states_path,
+            "moves": moves_path,
+            "visited_states": len(state_costs) 
+        }
     return solution
 
 

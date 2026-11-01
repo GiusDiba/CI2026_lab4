@@ -156,3 +156,10 @@ pieces = [
 initializeProblem(KP06, pieces, "A")
 
 del pieces
+
+### SIMPLE TEST PROBLEMS ###
+KPTEST01 = Problem("test", 4, 5, 1)
+pieces = [
+    Piece("A", 2, 2, 0, 0)
+]
+initializeProblem(KPTEST01, pieces, "A")

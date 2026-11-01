@@ -68,14 +68,29 @@ class Board:
         self.pieces = {}
         self.board = [["." for _ in range(width)] for _ in range(height)]
 
+    # Suggested by Claude in order to actually have a meaningful way to represent equal states
+    def stateKey(self) -> list:
+        cells = []
+        for row in self.board:
+            for tag in row:
+                if tag == ".":
+                    cells.append(".")
+                elif tag == self.target:
+                    cells.append("T")
+                else:
+                    p = self.pieces[tag]
+                    cells.append(f"{p.width}x{p.height}")
+
+        return ",".join(cells)
+
     def __hash__(self):
-        return hash(self.printBoard())
+        return hash(self.stateKey())
 
     def __eq__(self, other):
-        return len(self.board) == len(other.board)
+        return isinstance(other, Board) and self.stateKey() == other.stateKey()
 
     def __lt__(self, other):
-        return len(self.board) < len(other.board)
+        return self.stateKey() < other.stateKey()
 
     def setTargetPiece(self, tag: str) -> tuple | None:
         far_left = self.pieces[tag].width + self.exit_loc - 1
@@ -206,7 +221,7 @@ class Board:
 
     def getManhattanDistanceToExit(self) -> int: # ideal number of moves neede if the board would be empty in order to reach the exit
         piece = self.pieces[self.target]
-        return abs(piece.row - self.win_position[0] + piece.col - self.win_position[1])
+        return abs(piece.row - self.win_position[0]) + abs(piece.col - self.win_position[1])
 
 class Problem():
     _id: str
