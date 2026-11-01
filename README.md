@@ -1,8 +1,22 @@
-many blocks with different shapes. The objective is to bring the 2x2 block to the exit
+# CI2026_lab4
 
-N M = sum (r c n + e), e>= 2
-NxM = board size
-n_rc pieces of size rxc
-e = empty cells
+## _Klotski Problem_ approached using path search
 
-two empty spaces must be present in the board at any given time
+---
+
+### State
+
+In this implementation, the state space is given by all possible board configurations, therefore states and nodes are represented by `Board` objects.
+
+### Path
+
+A path is a sequence of successive board configuartion ("linked" states differ only from a single move). All legal moves that may be performed in a given state are stored in the property `Board.legal_moves`.
+
+### Algorithm
+
+I implemented an A* algorithm: each move has a cost of 1, and the heuristic is the manhattan distance of the target piece from the exit.
+(possible improvement: add to the heuristic the amount of pieces that have to be moved from the ideal trajectory)
+
+### Credits and AI use
+
+I used the priority queue implementation from the professor. I have used Claude just to debug my code once it was finished (see comments).
