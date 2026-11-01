@@ -1,4 +1,4 @@
-from klotski_models import Problem, Piece
+from utils.klotski_models import Problem, Piece
 
 def initializeProblem(problem: Problem, pieces: list, target: str) -> None:
     for p in pieces:

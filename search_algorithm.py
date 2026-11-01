@@ -1,5 +1,5 @@
-from klotski_models import Board, Problem
-from upq import UPQ
+from utils.klotski_models import Board, Problem
+from utils.upq import UPQ
 from copy import deepcopy
 def search(
     initial_state: Board
