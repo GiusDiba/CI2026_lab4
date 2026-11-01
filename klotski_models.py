@@ -68,6 +68,15 @@ class Board:
         self.pieces = {}
         self.board = [["." for _ in range(width)] for _ in range(height)]
 
+    def __hash__(self):
+        return hash(self.printBoard())
+
+    def __eq__(self, other):
+        return len(self.board) == len(other.board)
+
+    def __lt__(self, other):
+        return len(self.board) < len(other.board)
+
     def setTargetPiece(self, tag: str) -> tuple | None:
         far_left = self.pieces[tag].width + self.exit_loc - 1
         if len(self.pieces) == 0 or far_left >= self.width:
