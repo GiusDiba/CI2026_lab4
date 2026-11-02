@@ -23,12 +23,12 @@ def search(
                 parent_state[new_board] = cur_board
                 previous_move[new_board] = action
                 state_costs[new_board] = state_costs[cur_board] + 1 # Every state is 1 move away from the previous one
-                frontier.push_update(new_board, state_costs[new_board] + new_board.getManhattanDistanceToExit())
+                frontier.push_update(new_board, state_costs[new_board] + new_board.getManhattanDistanceToExit() + new_board.countPiecesInTheWay())
             elif new_board in frontier and state_costs[new_board] > state_costs[cur_board] + 1:
                 state_costs[new_board] = state_costs[cur_board] + 1
                 parent_state[new_board] = cur_board
                 previous_move[new_board] = action
-                frontier.push_update(new_board, state_costs[new_board] + new_board.getManhattanDistanceToExit())        
+                frontier.push_update(new_board, state_costs[new_board] + new_board.getManhattanDistanceToExit() + new_board.countPiecesInTheWay())        
         if frontier:
             cur_board, _ = frontier.pop()
         else:

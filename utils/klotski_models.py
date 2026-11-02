@@ -42,7 +42,7 @@ class Piece:
 
 # If there is a piece blocking the way, error_code is its tag. If the piece would be out of bounds, error_code is an empty_string
 class IllegalMoveException(Exception):
-    def __init__(self, message: str, error_code: str):
+    def __init__(self, message: str, error_code: set):
         self.message = message
         super().__init__(self.message)
         self.error_code = error_code
@@ -142,6 +142,7 @@ class Board:
             self.updatePieceAvailableMoves(self.pieces[p])
 
     def getRangeAndCol(self, piece: Piece, increment: int) -> (int, int):
+        blocking = set()
         if increment > 0:                      # If I go right, i have to check 1 column to the right
             col_to_check = piece.col + piece.width
         else:                                       # Else I want to check 1 column to the left
@@ -152,10 +153,13 @@ class Board:
             raise IllegalMoveException("Out of bounds", "")
         for idx in range_to_check:
             if self.board[idx][col_to_check] != ".":
-                raise IllegalMoveException("A piece is blocking the way", self.board[idx][col_to_check])
+                blocking.add(self.board[idx][col_to_check])
+            if len(blocking) != 0:
+                raise IllegalMoveException("A piece is blocking the way", blocking)
         return range_to_check, col_to_check
 
     def getRangeAndRow(self, piece: Piece, increment: int) -> (int, int):
+        blocking = set()
         if increment > 0:                      # If I go down, I have to check 1 row to the bottom
             row_to_check = piece.row + piece.height
         else:
@@ -166,6 +170,8 @@ class Board:
             raise IllegalMoveException("Out of bounds", "")
         for idx in range_to_check:
             if self.board[row_to_check][idx] != ".":
+                blocking.add(self.board[row_to_check][idx])
+            if len(blocking) != 0:
                 raise IllegalMoveException("A piece is blocking the way", self.board[row_to_check][idx])
         return range_to_check, row_to_check
 
@@ -222,6 +228,50 @@ class Board:
     def getManhattanDistanceToExit(self) -> int: # ideal number of moves neede if the board would be empty in order to reach the exit
         piece = self.pieces[self.target]
         return abs(piece.row - self.win_position[0]) + abs(piece.col - self.win_position[1])
+
+    def countPiecesRow(self, piece: Piece) -> set:
+        obstacles = set()
+        while (piece.row != self.win_position[0]):
+            diff = self.win_position[0] - piece.row
+            incr = diff // abs(diff)
+            try:
+                self.getRangeAndRow(piece, incr)
+            except IllegalMoveException as err:
+                obstacles = obstacles.union(err.error_code)
+            piece.row += incr
+        return obstacles
+
+    def countPiecesCol(self, piece: Piece) -> set:
+        obstacles = set()
+        while (piece.col != self.win_position[1]):
+            diff = self.win_position[1] - piece.col
+            incr = diff // abs(diff)
+            try:
+                self.getRangeAndCol(piece, incr)
+            except IllegalMoveException as err:
+                obstacles = obstacles.union(err.error_code)
+            piece.col += incr
+        #print(obstacles)
+        return obstacles
+
+    def countPiecesInTheWay(self) -> int:
+        piece = self.pieces[self.target]
+        ideal_piece = Piece(piece.tag, piece.width, piece.height, piece.row, piece.col)
+
+        # First move sideways, then vertically
+        obstacles = self.countPiecesRow(ideal_piece)
+        obstacles.union(self.countPiecesCol(ideal_piece))
+        len1 = len(obstacles)
+
+        # Now the opposite
+        ideal_piece = Piece(piece.tag, piece.width, piece.height, piece.row, piece.col)
+        obstacles.clear()
+        obstacles = self.countPiecesCol(ideal_piece)
+        obstacles.union(self.countPiecesRow(ideal_piece))
+        len2 = len(obstacles)
+
+        return len1 + len2
+          
 
 class Problem():
     _id: str

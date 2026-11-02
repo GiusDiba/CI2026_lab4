@@ -14,9 +14,8 @@ A path is a sequence of successive board configuartion ("linked" states differ o
 
 ### Algorithm
 
-I implemented an A* algorithm: each move has a cost of 1, and the heuristic is the manhattan distance of the target piece from the exit.
-(possible improvement: add to the heuristic the amount of pieces that have to be moved from the ideal trajectory)
+I implemented an A* algorithm: each move has a cost of 1, and the heuristic is the sum of the manhattan distance of the target piece from the exit and the amount of pieces in the way.
 
 ### Credits and AI use
 
-I used the priority queue implementation from the professor. I have used Claude just to debug my code once it was finished (see comments).
+I used the priority queue implementation from the professor. I have used Claude just to debug my code once it was finished (i had a bug in the manhattan distance calculation and in the hash code implementation).
